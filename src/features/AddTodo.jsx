@@ -1,34 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { BsFillArrowLeftCircleFill } from "react-icons/bs";
+import { useQueryClient } from "react-query";
 import { useRouter } from "next/router";
+import { BsFillArrowLeftCircleFill } from "react-icons/bs";
 
 const TodoForm = () => {
-  const [todos, setTodos] = useState([]);
-
-  const router = useRouter();
-
   const [todo, setTodo] = useState({
     fname: "",
     lname: "",
     email: "",
     age: "",
     task: "",
-    id: ""
+    id: "",
   });
 
   const [fieldErrors, setFieldErrors] = useState({});
+  const queryClient = useQueryClient();
+  const router = useRouter();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setTodo((prevTodo) => ({
       ...prevTodo,
-      [name]: value
+      [name]: value,
     }));
-    setFieldErrors({
-      ...fieldErrors,
-      [name]: ""
-    });
+    setFieldErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: "",
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -56,33 +55,28 @@ const TodoForm = () => {
       return;
     }
 
-    const updatedTodos = [...todos, { ...todo, id: Math.random() * 10 }];
-    setTodos(updatedTodos);
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
+    const addTodo = async () => {
+      const todos = JSON.parse(localStorage.getItem("todos")) || [];
+      const updatedTodos = [...todos, { ...todo, id: Math.random() * 10 }];
+      localStorage.setItem("todos", JSON.stringify(updatedTodos));
+      queryClient.setQueryData("todos", updatedTodos);
 
-    setTodo({
-      fname: "",
-      lname: "",
-      email: "",
-      age: "",
-      task: "",
-      id: ""
-    });
-    setFieldErrors({});
-    //Remove stored AddTodo input field values
-    localStorage.removeItem("addTodoData"); 
+      setTodo({
+        fname: "",
+        lname: "",
+        email: "",
+        age: "",
+        task: "",
+        id: "",
+      });
+      setFieldErrors({});
+
+      localStorage.removeItem("addTodoData");
+      router.push("/");
+    };
+
+    addTodo();
   };
-
-  //Retrieves todo if any and set to current todo state
-  useEffect(() => {
-    const existingTodos = JSON.parse(localStorage.getItem("todos")) || [];
-    setTodos(existingTodos);
-  }, []);
-
-  //Store current AddTodo input field values in local storage
-  useEffect(() => {
-    localStorage.setItem("addTodoData", JSON.stringify(todo)); 
-  }, [todo]);
 
   return (
     <div className="container mx-auto px-8 py-8">
@@ -106,13 +100,10 @@ const TodoForm = () => {
         className="w-full max-w-sm mx-auto bg-white p-8 rounded-md shadow-md"
       >
         <div className="mb-4">
-          {fieldErrors.fname && (
-            <p className="text-red-400">{fieldErrors.fname}</p>
-          )}
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
             htmlFor="fname"
-          >
+            >
             First name
           </label>
           <input
@@ -123,16 +114,16 @@ const TodoForm = () => {
             placeholder="Cobby"
             value={todo.fname}
             onChange={handleInputChange}
-          />
+            />
+            {fieldErrors.fname && (
+              <p className="text-red-400">{fieldErrors.fname}</p>
+            )}
         </div>
         <div className="mb-4">
-          {fieldErrors.lname && (
-            <p className="text-red-400">{fieldErrors.lname}</p>
-          )}
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
             htmlFor="lname"
-          >
+            >
             Last name
           </label>
           <input
@@ -144,15 +135,15 @@ const TodoForm = () => {
             value={todo.lname}
             onChange={handleInputChange}
           />
+            {fieldErrors.lname && (
+              <p className="text-red-400">{fieldErrors.lname}</p>
+            )}
         </div>
         <div className="mb-4">
-          {fieldErrors.email && (
-            <p className="text-red-400">{fieldErrors.email}</p>
-          )}
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
             htmlFor="email"
-          >
+            >
             Email
           </label>
           <input
@@ -163,14 +154,16 @@ const TodoForm = () => {
             placeholder="cobby@gmail.com"
             value={todo.email}
             onChange={handleInputChange}
-          />
+            />
+            {fieldErrors.email && (
+              <p className="text-red-400">{fieldErrors.email}</p>
+            )}
         </div>
         <div className="mb-4">
-          {fieldErrors.age && <p className="text-red-400">{fieldErrors.age}</p>}
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
             htmlFor="age"
-          >
+            >
             Age
           </label>
           <input
@@ -181,16 +174,14 @@ const TodoForm = () => {
             placeholder="24 years"
             value={todo.age}
             onChange={handleInputChange}
-          />
+            />
+            {fieldErrors.age && <p className="text-red-400">{fieldErrors.age}</p>}
         </div>
         <div className="mb-4">
-          {fieldErrors.task && (
-            <p className="text-red-400">{fieldErrors.task}</p>
-          )}
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
             htmlFor="confirm-password"
-          >
+            >
             Task
           </label>
           <textarea
@@ -200,7 +191,10 @@ const TodoForm = () => {
             placeholder="Add todo task"
             value={todo.task}
             onChange={handleInputChange}
-          />
+            />
+            {fieldErrors.task && (
+              <p className="text-red-400">{fieldErrors.task}</p>
+            )}
         </div>
         <button
           className="w-full bg-blue-400 text-white text-sm font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300"

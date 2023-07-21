@@ -1,26 +1,27 @@
-// EditTodo.js
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { BsFillArrowLeftCircleFill } from "react-icons/bs";
 import Link from "next/link";
+import { useQueryClient } from "react-query";
 
 const EditTodo = () => {
   const router = useRouter();
   const { id } = router.query;
+  const queryClient = useQueryClient();
 
   const [todo, setTodo] = useState({
     fname: "",
     lname: "",
     email: "",
     age: "",
-    task: ""
+    task: "",
   });
 
   const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     const todos = JSON.parse(localStorage.getItem("todos")) || [];
-    const foundTodo = todos.find((todo) => todo.id === id);
+    const foundTodo = todos.find((todo) => todo.id === parseInt(id));
 
     if (foundTodo) {
       setTodo(foundTodo);
@@ -36,11 +37,11 @@ const EditTodo = () => {
     const { name, value } = e.target;
     setTodo((prevTodo) => ({
       ...prevTodo,
-      [name]: value
+      [name]: value,
     }));
     setFieldErrors((prevErrors) => ({
       ...prevErrors,
-      [name]: ""
+      [name]: "",
     }));
   };
 
@@ -69,16 +70,23 @@ const EditTodo = () => {
       return;
     }
 
-    const todos = JSON.parse(localStorage.getItem("todos")) || [];
-    const updatedTodos = todos.map((item) => {
-      if (item.id === id) {
-        return { ...todo };
-      }
-      return item;
-    });
+    const updateTodoItem = async () => {
+      const todos = JSON.parse(localStorage.getItem("todos")) || [];
 
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
-    router.push(`/`);
+      const updatedTodos = todos.map((item) => {
+        if (item.id === parseInt(id)) {
+          return { ...item, ...todo };
+        }
+        return item;
+      });
+
+      localStorage.setItem("todos", JSON.stringify(updatedTodos));
+      queryClient.setQueryData("todos", updatedTodos);
+
+      router.push("/");
+    };
+
+    updateTodoItem();
     localStorage.removeItem("addTodoData");
   };
 
@@ -104,8 +112,10 @@ const EditTodo = () => {
         className="w-full max-w-sm mx-auto bg-white p-8 rounded-md shadow-md"
       >
         <div className="mb-4">
-          {fieldErrors.fname && <p className="text-red-400">{fieldErrors.fname}</p>}
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fname">
+          <label
+            className="block text-gray-700 text-sm font-bold mb-2"
+            htmlFor="fname"
+          >
             First name
           </label>
           <input
@@ -117,10 +127,15 @@ const EditTodo = () => {
             value={todo.fname}
             onChange={handleInputChange}
           />
+          {fieldErrors.fname && (
+            <p className="text-red-400">{fieldErrors.fname}</p>
+          )}
         </div>
         <div className="mb-4">
-          {fieldErrors.lname && <p className="text-red-400">{fieldErrors.lname}</p>}
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="lname">
+          <label
+            className="block text-gray-700 text-sm font-bold mb-2"
+            htmlFor="lname"
+          >
             Last name
           </label>
           <input
@@ -132,10 +147,15 @@ const EditTodo = () => {
             value={todo.lname}
             onChange={handleInputChange}
           />
+          {fieldErrors.lname && (
+            <p className="text-red-400">{fieldErrors.lname}</p>
+          )}
         </div>
         <div className="mb-4">
-          {fieldErrors.email && <p className="text-red-400">{fieldErrors.email}</p>}
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+          <label
+            className="block text-gray-700 text-sm font-bold mb-2"
+            htmlFor="email"
+          >
             Email
           </label>
           <input
@@ -147,10 +167,15 @@ const EditTodo = () => {
             value={todo.email}
             onChange={handleInputChange}
           />
+          {fieldErrors.email && (
+            <p className="text-red-400">{fieldErrors.email}</p>
+          )}
         </div>
         <div className="mb-4">
-          {fieldErrors.age && <p className="text-red-400">{fieldErrors.age}</p>}
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="age">
+          <label
+            className="block text-gray-700 text-sm font-bold mb-2"
+            htmlFor="age"
+            >
             Age
           </label>
           <input
@@ -161,11 +186,14 @@ const EditTodo = () => {
             value={todo.age}
             placeholder="24 years"
             onChange={handleInputChange}
-          />
+            />
+            {fieldErrors.age && <p className="text-red-400">{fieldErrors.age}</p>}
         </div>
         <div className="mb-4">
-          {fieldErrors.task && <p className="text-red-400">{fieldErrors.task}</p>}
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="task">
+          <label
+            className="block text-gray-700 text-sm font-bold mb-2"
+            htmlFor="task"
+          >
             Task
           </label>
           <textarea
@@ -176,6 +204,9 @@ const EditTodo = () => {
             value={todo.task}
             onChange={handleInputChange}
           />
+          {fieldErrors.task && (
+            <p className="text-red-400">{fieldErrors.task}</p>
+          )}
         </div>
         <button
           className="w-full bg-blue-400 text-white text-sm font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300"
